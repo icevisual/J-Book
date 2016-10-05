@@ -1,13 +1,11 @@
 package com.common.utils;
 
-import java.sql.Timestamp;
-
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-public class CatchQisuu extends BaseCatch {
-
+public class CatchQisuu extends BaseBook {
+	
 	
 	public CatchQisuu(String startUrl) {
 		super(startUrl);
@@ -115,6 +113,18 @@ public class CatchQisuu extends BaseCatch {
 				singleRet = this.doMatches(element);
 				if(BaseCatch.SUCCESS.equals(singleRet[0])){
 					// Get The Books I want to download
+					
+					// Check Earliest Day & Last Book Name
+					if(this.checkEarliestDay( singleRet[4])){
+						logger.info("Stoped as earliest date touched");
+						return ret;
+					}
+					
+					if(this.checkLastBookName( singleRet[1])){
+						logger.info("Stoped as we have already got this book");
+						return ret;
+					}
+					
 					if (!"".equals(inFile))
 						appendLine(inFile, singleRet[1]);// Write ImgSrc Into File
 					logger.info("Get  Book  SRC:\t" + singleRet[4] +"\t"+ singleRet[1] + "\t"+ singleRet[2] +"\t"+ singleRet[3]);
@@ -163,7 +173,7 @@ public class CatchQisuu extends BaseCatch {
 				searchedPageNumber ++;
 				// IF Success
 				nextUrl = ret[2];
-				if(this.isOutofMaxSearchPageNumber(searchedPageNumber)){
+				if(this.checkMaxSearchPageNumber(searchedPageNumber)){
 					logger.info("Stop Looping as Page Search Count larger than limitation");
 					return "";
 				}
@@ -226,19 +236,19 @@ public class CatchQisuu extends BaseCatch {
 		return null;
 	}
 	
+	@Override
+	public Element getPageImgeNode(Document doc) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	public static void main(String[] args) throws Exception {
 		
+		CatchQisuu cc = new CatchQisuu("http://www.qisuu.com/soft/sort01/");
 		
-		String str = "2016-09-09";
-
-		Timestamp t = Timestamp.valueOf(str+ " 00:00:00");
-		System.out.println(t.getTime());
-		
-		
-//		CatchQisuu cc = new CatchQisuu("http://www.qisuu.com/soft/sort01/");
-//		cc.doLoop();
-		
+		cc.setEarliestDate("2016-09-20");
+		cc.setLastBookName(new String[]{"独步"});
+		cc.doLoop();
 		
 		// Catch4493 c = new
 		// Catch4493("http://www.4493.com/wangluomeinv/28247/1.htm");
@@ -246,12 +256,6 @@ public class CatchQisuu extends BaseCatch {
 
 		//
 		//
-	}
-
-	@Override
-	public Element getPageImgeNode(Document doc) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 }

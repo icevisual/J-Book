@@ -45,44 +45,6 @@ public abstract class BaseCatch extends BaseUtil {
 	 */
 	protected String storeMode = "DYNAMIC";
 
-	protected int maxSearchPageNumber = 0;
-
-	protected int maxSearchGroupNumber = 0;
-
-	protected String earliestDate = "";
-	protected String[] lastBookName = null;
-
-	public String getEarliestDate() {
-		return earliestDate;
-	}
-
-	public void setEarliestDate(String earliestDate) {
-		this.earliestDate = earliestDate;
-	}
-
-	public String[] getLastBookName() {
-		return lastBookName;
-	}
-
-	public void setLastBookName(String[] lastBookName) {
-		this.lastBookName = lastBookName;
-	}
-
-	public int getMaxSearchGroupNumber() {
-		return maxSearchGroupNumber;
-	}
-
-	public void setMaxSearchGroupNumber(int maxSearchGroupNumber) {
-		this.maxSearchGroupNumber = maxSearchGroupNumber;
-	}
-
-	public int getMaxSearchPageNumber() {
-		return maxSearchPageNumber;
-	}
-
-	public void setMaxSearchPageNumber(int maxSearchPageNumber) {
-		this.maxSearchPageNumber = maxSearchPageNumber;
-	}
 
 	public String getStoreMode() {
 		return storeMode;
@@ -144,25 +106,6 @@ public abstract class BaseCatch extends BaseUtil {
 		// 初始化资源保存路径
 		String path = this.getImgStoreBasePath();
 		BaseUtil.mkPath(path);
-	}
-
-	public Long dataStr2timestamp(String str) {
-		Timestamp t = Timestamp.valueOf(str + " 00:00:00");
-		return t.getTime();
-	}
-
-	/**
-	 * check the searched page numbers
-	 * 
-	 * @param currentNumber
-	 * @return
-	 */
-	public boolean isOutofMaxSearchPageNumber(int currentNumber) {
-		int max = this.getMaxSearchPageNumber();
-		if (max == 0) {
-			return false;
-		}
-		return currentNumber >= max;
 	}
 
 	public abstract Element getPageImgeNode(Document doc);
