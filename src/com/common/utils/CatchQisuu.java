@@ -1,8 +1,6 @@
 package com.common.utils;
 
-import java.io.File;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.sql.Timestamp;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -10,13 +8,15 @@ import org.jsoup.select.Elements;
 
 public class CatchQisuu extends BaseCatch {
 
+	
 	public CatchQisuu(String startUrl) {
 		super(startUrl);
-		this.setImgSrcFile("C:\\Users\\Administrator\\Desktop\\000.txt");
-		File f = new File(this.getImgSrcFile());
-		f.delete();
+		this.setImgSrcFile(".\\000.txt");
+		this.deleteFile(this.getImgSrcFile());
+		this.setDownload(false);
+		this.setMaxSearchPageNumber(2);
 	}
-
+	
 	@Override
 	public Element getNextGroupNode(Document doc) {
 		// TODO Auto-generated method stub
@@ -155,11 +155,18 @@ public class CatchQisuu extends BaseCatch {
 		String pageUrl = basePath + pageName;
 		String ret[] = null;
 		String nextUrl = pageUrl;
+		int searchedPageNumber = 0 ;
+		
 		while (!"#".equals(nextUrl) && !"".equals(nextUrl)) {
 			ret = doBookPage(pageUrl,inFile);
 			if (BaseCatch.SUCCESS.equals(ret[0])) {
+				searchedPageNumber ++;
 				// IF Success
 				nextUrl = ret[2];
+				if(this.isOutofMaxSearchPageNumber(searchedPageNumber)){
+					logger.info("Stop Looping as Page Search Count larger than limitation");
+					return "";
+				}
 				// downloadURLContent(imgSrc, this.getImgStoreBasePath());
 			} else {
 				// FAIL AS FIND NO USEFULL INFOMATION FROM THE PAGE
@@ -221,12 +228,22 @@ public class CatchQisuu extends BaseCatch {
 	
 
 	public static void main(String[] args) throws Exception {
+		
+		
+		String str = "2016-09-09";
+
+		Timestamp t = Timestamp.valueOf(str+ " 00:00:00");
+		System.out.println(t.getTime());
+		
+		
+//		CatchQisuu cc = new CatchQisuu("http://www.qisuu.com/soft/sort01/");
+//		cc.doLoop();
+		
+		
 		// Catch4493 c = new
 		// Catch4493("http://www.4493.com/wangluomeinv/28247/1.htm");
 		// c.doLoop();
-		CatchQisuu cc = new CatchQisuu("http://www.qisuu.com/soft/sort01/");
 
-		cc.doLoop();
 		//
 		//
 	}

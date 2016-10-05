@@ -1,5 +1,6 @@
 package com.common.utils;
 
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -8,44 +9,80 @@ import org.jsoup.nodes.Element;
 
 public abstract class BaseCatch extends BaseUtil {
 
-	
 	private String imgSrcFile;
 	private String imgStoreBasePath;
-	private String imgGroupPageUrl ;
-	
+	private String imgGroupPageUrl;
+
 	/**
 	 * 每次循环的最大次数
 	 */
 	private Integer loopLimit = 20;
 	protected static String SUCCESS = "SUCCESS";
 	protected static String FAIL = "FAIL";
-	
+
 	/**
 	 * 是否下载
 	 */
 	protected boolean download = false;
-	
+
 	/**
 	 * 输出链接的文件地址
 	 */
 	protected String defaultSrcFile = "C:\\Users\\Administrator\\Desktop\\000.txt";
-	
+
 	/**
 	 * 输出链接的格式
 	 */
 	protected String srcFormat = "%s";
-	
+
 	/**
 	 * 每次请求的间隔（毫秒）
 	 */
 	protected Integer sleepTime = 1000;
-	
+
 	/**
-	 * 存储模式
-	 * DYNAMIC 动态文件夹 | STATIC 静态
+	 * 存储模式 DYNAMIC 动态文件夹 | STATIC 静态
 	 */
-	protected String storeMode = "DYNAMIC"; 
-	
+	protected String storeMode = "DYNAMIC";
+
+	protected int maxSearchPageNumber = 0;
+
+	protected int maxSearchGroupNumber = 0;
+
+	protected String earliestDate = "";
+	protected String[] lastBookName = null;
+
+	public String getEarliestDate() {
+		return earliestDate;
+	}
+
+	public void setEarliestDate(String earliestDate) {
+		this.earliestDate = earliestDate;
+	}
+
+	public String[] getLastBookName() {
+		return lastBookName;
+	}
+
+	public void setLastBookName(String[] lastBookName) {
+		this.lastBookName = lastBookName;
+	}
+
+	public int getMaxSearchGroupNumber() {
+		return maxSearchGroupNumber;
+	}
+
+	public void setMaxSearchGroupNumber(int maxSearchGroupNumber) {
+		this.maxSearchGroupNumber = maxSearchGroupNumber;
+	}
+
+	public int getMaxSearchPageNumber() {
+		return maxSearchPageNumber;
+	}
+
+	public void setMaxSearchPageNumber(int maxSearchPageNumber) {
+		this.maxSearchPageNumber = maxSearchPageNumber;
+	}
 
 	public String getStoreMode() {
 		return storeMode;
@@ -78,7 +115,7 @@ public abstract class BaseCatch extends BaseUtil {
 	public void setDefaultSrcFile(String defaultSrcFile) {
 		this.defaultSrcFile = defaultSrcFile;
 	}
-	
+
 	public String getSrcFormat() {
 		return srcFormat;
 	}
@@ -87,113 +124,124 @@ public abstract class BaseCatch extends BaseUtil {
 		this.srcFormat = srcFormat;
 	}
 
-	public String formatSrc(String src){
+	public String formatSrc(String src) {
 		return String.format(this.srcFormat, src);
 	}
-	
-	public BaseCatch(String startUrl){
+
+	public BaseCatch(String startUrl) {
 		this.setImgGroupPageUrl(startUrl);
 		this._init();
 	}
-	
-	public void _init(){
-		//资源链接存储文件
+
+	public void _init() {
+		// 资源链接存储文件
 		this.setImgSrcFile(this.defaultSrcFile);
-		//资源保存路径
-		SimpleDateFormat sf = new SimpleDateFormat("YMMddHHmm");
-		this.setImgStoreBasePath("D:/pic/"+sf.format(new Date()));
-		//group 次数
+		// 资源保存路径
+		SimpleDateFormat sf = new SimpleDateFormat("YMMddHH");
+		this.setImgStoreBasePath("D:/pic/" + sf.format(new Date()));
+		// group 次数
 		this.setLoopLimit(200);
-		//初始化资源保存路径
+		// 初始化资源保存路径
 		String path = this.getImgStoreBasePath();
-		this.mkPath(path);
+		BaseUtil.mkPath(path);
 	}
-	
+
+	public Long dataStr2timestamp(String str) {
+		Timestamp t = Timestamp.valueOf(str + " 00:00:00");
+		return t.getTime();
+	}
+
+	/**
+	 * check the searched page numbers
+	 * 
+	 * @param currentNumber
+	 * @return
+	 */
+	public boolean isOutofMaxSearchPageNumber(int currentNumber) {
+		int max = this.getMaxSearchPageNumber();
+		if (max == 0) {
+			return false;
+		}
+		return currentNumber >= max;
+	}
+
 	public abstract Element getPageImgeNode(Document doc);
-	
+
 	public abstract Element getNextPageNode(Document doc);
-	
+
 	public abstract Element getNextGroupNode(Document doc);
-	
-	public  void doLoop() throws Exception {
+
+	public void doLoop() throws Exception {
 		String startPage = this.getImgGroupPageUrl();
 		String domain = this.getImgGroupPageUrl();
-		domain = domain.substring(0,domain.substring(7).indexOf("/")+7);
-		String bPath =  this.getImgGroupPageUrl().substring(0,this.getImgGroupPageUrl().lastIndexOf("/")+1);
+		domain = domain.substring(0, domain.substring(7).indexOf("/") + 7);
+		String bPath = this.getImgGroupPageUrl().substring(0, this.getImgGroupPageUrl().lastIndexOf("/") + 1);
 		String nextPage = "";
 		String storeBasePath = this.getImgStoreBasePath();
 		String groupPath = "";
-		int limitn = 1;		
-		while(!"".equals(startPage) && !"#".equals(startPage)){
-			
-			if("DYNAMIC".equals(this.getStoreMode().toUpperCase()) ){
-				groupPath = storeBasePath+"/"+(int)(Math.log(limitn) );
+		int limitn = 1;
+		while (!"".equals(startPage) && !"#".equals(startPage)) {
+
+			if ("DYNAMIC".equals(this.getStoreMode().toUpperCase())) {
+				groupPath = storeBasePath + "/" + (int) (Math.log(limitn));
 				this.mkPath(groupPath);
 				this.setImgStoreBasePath(groupPath);
 			}
-			
+
 			nextPage = doGroup(startPage);
-			
-			if(nextPage != null && !"".equals(nextPage)){
-				if(nextPage.startsWith("/")){
+
+			if (nextPage != null && !"".equals(nextPage)) {
+				if (nextPage.startsWith("/")) {
 					nextPage = domain + nextPage;
-				}else if (nextPage.startsWith("http:")) {
-					
-				}else{
+				} else if (nextPage.startsWith("http:")) {
+
+				} else {
 					nextPage = bPath + nextPage;
 				}
 			}
-			
-			logger.info("Last Group:"+startPage);
+
+			logger.info("Last Group:" + startPage);
 			startPage = nextPage;
 			System.out.println();
-			limitn ++;
-			if(limitn > this.getLoopLimit()){
+			limitn++;
+			if (limitn > this.getLoopLimit()) {
 				break;
 			}
 		}
 	}
 
-	
-	
 	/**
 	 * 
 	 * @param url
-	 * @return
-	 * 		1.页面结构不符				=>结束
-	 * 		2.有下一页，有下一组	组内		=>扫下一页
-	 * 		3.有下一页，无下一组	组内,链末	=>扫下一页
-	 * 		4.无下一页，有下一组	组末		=>扫下一组
-	 * 		5.无下一页，无下一组	组末,链末	=>结束
+	 * @return 1.页面结构不符 =>结束 2.有下一页，有下一组 组内 =>扫下一页 3.有下一页，无下一组 组内,链末 =>扫下一页
+	 *         4.无下一页，有下一组 组末 =>扫下一组 5.无下一页，无下一组 组末,链末 =>结束
 	 * @throws Exception
 	 */
-	public  String[] doPage(String url) throws Exception{
+	public String[] doPage(String url) throws Exception {
 		/**
-		 * [0]=>CODE:SUCCESS/FAIL
-		 * [1]=>IMG_SRC:STRING
-		 * [2]=>NEXT_PAGE_URL:STRING
+		 * [0]=>CODE:SUCCESS/FAIL [1]=>IMG_SRC:STRING [2]=>NEXT_PAGE_URL:STRING
 		 * [3]=>NEXT_GROUP_URL:STRING
 		 */
-		String [] 	ret = {BaseCatch.SUCCESS,"","",""};
+		String[] ret = { BaseCatch.SUCCESS, "", "", "" };
 		try {
 			Document doc = connect(url);
-			Element imgNode	= this.getPageImgeNode(doc);
-			String img	= "";
-			if(imgNode !=null){
-				img	= imgNode.attr("src");
+			Element imgNode = this.getPageImgeNode(doc);
+			String img = "";
+			if (imgNode != null) {
+				img = imgNode.attr("src");
 			}
-			
-			if( !"".equals(img) && !img.startsWith("http:")){
-				//http://www.88xm.com/
-				img = url.substring(0,url.substring(7).indexOf('/') + 7) + img;
+
+			if (!"".equals(img) && !img.startsWith("http:")) {
+				// http://www.88xm.com/
+				img = url.substring(0, url.substring(7).indexOf('/') + 7) + img;
 			}
-			ret[1] 					= img;
+			ret[1] = img;
 			logger.info("Get  Img  SRC:\t" + img);
-			
-			Element nextPageNode 	= this.getNextPageNode(doc);
+
+			Element nextPageNode = this.getNextPageNode(doc);
 			// 获取下一组的节点
-			Element nextGroup 		= this.getNextGroupNode(doc);
-			ret[3] 					= nextGroup==null?"":nextGroup.attr("href");
+			Element nextGroup = this.getNextGroupNode(doc);
+			ret[3] = nextGroup == null ? "" : nextGroup.attr("href");
 			if (nextPageNode == null) {
 				logger.info("<<<\tEND AS Next Page URL NOT FOUND");
 				return ret;
@@ -210,53 +258,55 @@ public abstract class BaseCatch extends BaseUtil {
 		ret[0] = BaseCatch.FAIL;
 		return ret;
 	}
-	
-	public  String doGroup(String url) throws Exception {
-		return doGroup(url,"");
+
+	public String doGroup(String url) throws Exception {
+		return doGroup(url, "");
 	}
-	public  String doGroup(String url,
-			String inFile) throws Exception {
-		if("".equals(inFile)){
+
+	public String doGroup(String url, String inFile) throws Exception {
+		if ("".equals(inFile)) {
 			inFile = this.getImgSrcFile();
 		}
-		String basePath = url.substring(0,url.lastIndexOf("/")+1);
-		String pageName = url.substring(url.lastIndexOf("/")+1);
-		String pageUrl 	= basePath + pageName;
-		String ret[]	= null;
-		String imgSrc 	= "";
-		String nextUrl	= pageUrl;
+		String basePath = url.substring(0, url.lastIndexOf("/") + 1);
+		String pageName = url.substring(url.lastIndexOf("/") + 1);
+		String pageUrl = basePath + pageName;
+		String ret[] = null;
+		String imgSrc = "";
+		String nextUrl = pageUrl;
 		String srcStr = "";
-		while (!"#".equals(nextUrl) && !"".equals(nextUrl) ) {
-			ret	= doPage(pageUrl);
-			if(BaseCatch.SUCCESS.equals(ret[0])){
-				//IF Success
-				imgSrc 		= ret[1];
-				nextUrl 	= ret[2];
-				
-				srcStr 		= this.formatSrc(imgSrc);
-				if(!"".equals(inFile)) appendLine(inFile, srcStr);//Write ImgSrc Into File
-				
-				if(this.download == true){
+		while (!"#".equals(nextUrl) && !"".equals(nextUrl)) {
+			ret = doPage(pageUrl);
+			if (BaseCatch.SUCCESS.equals(ret[0])) {
+				// IF Success
+				imgSrc = ret[1];
+				nextUrl = ret[2];
+
+				srcStr = this.formatSrc(imgSrc);
+				if (!"".equals(inFile))
+					appendLine(inFile, srcStr);// Write ImgSrc Into File
+
+				if (this.download == true) {
 					downloadURLContent(imgSrc, this.getImgStoreBasePath());
 				}
-			}else{
-				//FAIL AS FIND NO USEFULL INFOMATION FROM THE PAGE
+			} else {
+				// FAIL AS FIND NO USEFULL INFOMATION FROM THE PAGE
 				return BaseCatch.FAIL;
 			}
-			if("".equals(nextUrl) || "#".equals(nextUrl)){
-				//GROUP OVER AND RETURN NEXT GROUP URL;
-				//OR LOOP NEXT GROUP ?
+			if ("".equals(nextUrl) || "#".equals(nextUrl)) {
+				// GROUP OVER AND RETURN NEXT GROUP URL;
+				// OR LOOP NEXT GROUP ?
 				return ret[3];
 			}
-			if((basePath + nextUrl).equals(pageUrl) ) return ret[3];
-			if(nextUrl.startsWith("/")){
+			if ((basePath + nextUrl).equals(pageUrl))
+				return ret[3];
+			if (nextUrl.startsWith("/")) {
 				String domain = basePath.substring(7);
-				domain = domain.substring(0,domain.indexOf("/"));
-				domain = "http://"+domain;
+				domain = domain.substring(0, domain.indexOf("/"));
+				domain = "http://" + domain;
 				pageUrl = domain + nextUrl;
-			}else if(nextUrl.startsWith("http:")){
+			} else if (nextUrl.startsWith("http:")) {
 				pageUrl = nextUrl;
-			}else{
+			} else {
 				pageUrl = basePath + nextUrl;
 			}
 			Thread.sleep(this.getSleepTime());
@@ -264,9 +314,8 @@ public abstract class BaseCatch extends BaseUtil {
 		return "";
 	}
 
-	public  boolean ifIgnoal(String path) {
-		String[] ACL = { "/meihuo/831.html", "/meihuo/835.html",
-				"/meihuo/838.html", "/meihuo/847.html" };
+	public boolean ifIgnoal(String path) {
+		String[] ACL = { "/meihuo/831.html", "/meihuo/835.html", "/meihuo/838.html", "/meihuo/847.html" };
 		for (int i = 0; i < ACL.length; i++) {
 			if (ACL[i].equals(path)) {
 				return true;
@@ -279,16 +328,13 @@ public abstract class BaseCatch extends BaseUtil {
 		this.imgStoreBasePath = imgStoreBasePath;
 	}
 
-
 	public String getImgStoreBasePath() {
 		return imgStoreBasePath;
 	}
 
-
 	public void setImgSrcFile(String imgSrcFile) {
 		this.imgSrcFile = imgSrcFile;
 	}
-
 
 	public String getImgSrcFile() {
 		return imgSrcFile;

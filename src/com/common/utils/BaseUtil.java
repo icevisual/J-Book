@@ -148,7 +148,9 @@ public class BaseUtil {
 	public void deleteFile(String filePath) {
 		try {
 			File f= new File(filePath);
-			f.delete();
+			if(f.exists()){
+				f.delete();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
