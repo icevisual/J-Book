@@ -1,6 +1,5 @@
 package com.common.utils;
 
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -127,7 +126,7 @@ public abstract class BaseCatch extends BaseUtil {
 
 			if ("DYNAMIC".equals(this.getStoreMode().toUpperCase())) {
 				groupPath = storeBasePath + "/" + (int) (Math.log(limitn));
-				this.mkPath(groupPath);
+				BaseUtil.mkPath(groupPath);
 				this.setImgStoreBasePath(groupPath);
 			}
 

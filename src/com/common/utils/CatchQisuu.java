@@ -6,13 +6,11 @@ import org.jsoup.select.Elements;
 
 public class CatchQisuu extends BaseBook {
 	
-	
 	public CatchQisuu(String startUrl) {
 		super(startUrl);
-		this.setImgSrcFile(".\\000.txt");
+		this.setImgSrcFile(".\\load\\output\\000.txt");
 		this.deleteFile(this.getImgSrcFile());
 		this.setDownload(false);
-		this.setMaxSearchPageNumber(2);
 	}
 	
 	@Override
@@ -120,16 +118,18 @@ public class CatchQisuu extends BaseBook {
 						return ret;
 					}
 					
-					if(this.checkLastBookName( singleRet[1])){
+					if(this.isDownloaded( singleRet[1])){
 						logger.info("Stoped as we have already got this book");
 						return ret;
 					}
 					
 					if (!"".equals(inFile))
 						appendLine(inFile, singleRet[1]);// Write ImgSrc Into File
-					logger.info("Get  Book  SRC:\t" + singleRet[4] +"\t"+ singleRet[1] + "\t"+ singleRet[2] +"\t"+ singleRet[3]);
+		
+					logger.info("Get  Book  SRC:\t" + singleRet[4] +" "+ singleRet[1] + "\t"+ singleRet[2] +"\t"+ singleRet[3]);
 				}else{
 					// No thing to  download
+//					logger.info("Get  Nothing");
 				}
 			}
 			
@@ -154,8 +154,6 @@ public class CatchQisuu extends BaseBook {
 		return ret;
 	}
 
-	
-
 	public String doGroup(String url, String inFile) throws Exception {
 		if ("".equals(inFile)) {
 			inFile = this.getImgSrcFile();
@@ -174,7 +172,7 @@ public class CatchQisuu extends BaseBook {
 				// IF Success
 				nextUrl = ret[2];
 				if(this.checkMaxSearchPageNumber(searchedPageNumber)){
-					logger.info("Stop Looping as Page Search Count larger than limitation");
+					logger.info("Stop Looping as Page Search Count larger reach limitation");
 					return "";
 				}
 				// downloadURLContent(imgSrc, this.getImgStoreBasePath());
@@ -245,9 +243,9 @@ public class CatchQisuu extends BaseBook {
 	public static void main(String[] args) throws Exception {
 		
 		CatchQisuu cc = new CatchQisuu("http://www.qisuu.com/soft/sort01/");
-		
-		cc.setEarliestDate("2016-09-20");
-		cc.setLastBookName(new String[]{"独步"});
+		cc.setMaxSearchPageNumber(3);
+//		cc.setEarliestDate("2016-09-20");
+//		cc.setLastBookName(new String[]{"独步"});
 		cc.doLoop();
 		
 		// Catch4493 c = new
