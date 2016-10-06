@@ -13,12 +13,6 @@ public class CatchQisuu extends BaseBook {
 		this.setDownload(false);
 	}
 
-	@Override
-	public Element getNextGroupNode(Document doc) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	/**
 	 * process the match and determine what to get
 	 * 
@@ -69,7 +63,7 @@ public class CatchQisuu extends BaseBook {
 		bookName = c.substring(c.indexOf(">") + 1 + 1, c.lastIndexOf("》"));
 
 		if (size > 2.5) {
-			if (starNumber > 4 || size > 4) {
+			if (starNumber >= 4 || size > 4) {
 				ret[0] = BaseCatch.SUCCESS;
 				ret[1] = "http://dzs.qisuu.com/txt/" + bookName + ".txt";
 				ret[2] = size + "MB";
@@ -114,7 +108,7 @@ public class CatchQisuu extends BaseBook {
 
 					// Check Earliest Day & Last Book Name
 					if (this.checkEarliestDay(singleRet[4])) {
-						logger.info("Stoped as earliest date touched");
+						logger.info("Stoped as earliest date reached");
 						return ret;
 					}
 
@@ -202,7 +196,53 @@ public class CatchQisuu extends BaseBook {
 		}
 		return "";
 	}
+	
+	public void doLoop() throws Exception {
+		String startPage = this.getImgGroupPageUrl();
+		String domain = this.getImgGroupPageUrl();
+		domain = domain.substring(0, domain.substring(7).indexOf("/") + 7);
+		String bPath = this.getImgGroupPageUrl().substring(0, this.getImgGroupPageUrl().lastIndexOf("/") + 1);
+		String nextPage = "";
+		String storeBasePath = this.getImgStoreBasePath();
+		String groupPath = "";
+		int limitn = 1;
+		while (!"".equals(startPage) && !"#".equals(startPage)) {
 
+			if ("DYNAMIC".equals(this.getStoreMode().toUpperCase())) {
+				groupPath = storeBasePath + "/" + (int) (Math.log(limitn));
+				BaseUtil.mkPath(groupPath);
+				this.setImgStoreBasePath(groupPath);
+			}
+
+			nextPage = doGroup(startPage);
+
+			if (nextPage != null && !"".equals(nextPage)) {
+				if (nextPage.startsWith("/")) {
+					nextPage = domain + nextPage;
+				} else if (nextPage.startsWith("http:")) {
+
+				} else {
+					nextPage = bPath + nextPage;
+				}
+			}
+
+			logger.info("Last Group:" + startPage);
+			startPage = nextPage;
+			System.out.println();
+			
+			if("".equals(startPage) || "#".equals(startPage)){
+				startPage = this.getExcessGroupUrl();
+			}
+			
+			
+			limitn++;
+			if (limitn > this.getLoopLimit()) {
+				break;
+			}
+		}
+	}
+	
+	
 	@Override
 	public Element getNextPageNode(Document doc) {
 		try {
@@ -238,13 +278,35 @@ public class CatchQisuu extends BaseBook {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	@Override
+	public Element getNextGroupNode(Document doc) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	
+	public String getExcessGroupUrl() {
+		if(!this.excessGroupUrls.isEmpty()){
+			return this.excessGroupUrls.remove();
+		}
+		return "";
+	}
 
 	public static void main(String[] args) throws Exception {
 
+		String[] urls = { 
+				"http://www.qisuu.com/soft/sort02/",
+				"http://www.qisuu.com/soft/sort07/"
+		};
 		CatchQisuu cc = new CatchQisuu("http://www.qisuu.com/soft/sort01/");
+		cc.setExcessGroupUrls(urls);
+		cc.setImgSrcFile(".\\load\\output\\000.txt");
 		cc.setMaxSearchPageNumber(3);
 		cc.setEarliestDate("2016-09-01");
+//		cc.setEarliestDate("2016-10-01");
 		cc.doLoop();
+//		cc.mergeDaownloadList();
 
 		// Catch4493 c = new
 		// Catch4493("http://www.4493.com/wangluomeinv/28247/1.htm");

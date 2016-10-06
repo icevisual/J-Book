@@ -11,7 +11,10 @@ import java.io.InputStreamReader;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
 public abstract class BaseBook extends BaseCatch {
 
@@ -25,6 +28,11 @@ public abstract class BaseBook extends BaseCatch {
 
 	}
 
+	/**
+	 * Excess Groups
+	 */
+	protected Queue<String> excessGroupUrls = null;
+
 	protected Map<String, String> cachedLastBook = null;
 
 	protected int maxSearchPageNumber = 0;
@@ -33,6 +41,22 @@ public abstract class BaseBook extends BaseCatch {
 
 	protected String earliestDate = "";
 
+	public Queue<String> getExcessGroupUrls() {
+		return excessGroupUrls;
+	}
+
+	public void setExcessGroupUrls(Queue<String> excessGroupUrls) {
+		this.excessGroupUrls = excessGroupUrls;
+	}
+	
+	public void setExcessGroupUrls(String[] excessGroupUrls) {
+		this.excessGroupUrls = new LinkedList<String>();
+		for(String url : excessGroupUrls){
+			this.excessGroupUrls .add(url);
+		}
+	}
+	
+	
 	public String getEarliestDate() {
 		return earliestDate;
 	}
