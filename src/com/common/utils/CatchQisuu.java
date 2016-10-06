@@ -5,49 +5,49 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class CatchQisuu extends BaseBook {
-	
+
 	public CatchQisuu(String startUrl) {
 		super(startUrl);
 		this.setImgSrcFile(".\\load\\output\\000.txt");
 		this.deleteFile(this.getImgSrcFile());
 		this.setDownload(false);
 	}
-	
+
 	@Override
 	public Element getNextGroupNode(Document doc) {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
 	/**
 	 * process the match and determine what to get
+	 * 
 	 * @return
 	 */
-	public String[] doMatches(Element e){
+	public String[] doMatches(Element e) {
 		/**
-		 * [0]=>CODE:SUCCESS/FAIL 
-		 * [1]=>BookName
+		 * [0]=>CODE:SUCCESS/FAIL [1]=>BookName
 		 */
-		String [] ret = {BaseCatch.FAIL,"NAME","SIZE","SCORE","DATE"};
+		String[] ret = { BaseCatch.FAIL, "NAME", "SIZE", "SCORE", "DATE" };
 		// Determine to download or not
 		// By Size and score
-		
-		int starNumber = 0 ;
+
+		int starNumber = 0;
 		float size = 0;
-		
+
 		// Get Score
 		Elements stars = e.getElementsByTag("em");
-		if(!stars.isEmpty()){
+		if (!stars.isEmpty()) {
 			Element star = stars.get(0);
 			String className = star.className();
-			if(!"".equals(className)){
+			if (!"".equals(className)) {
 				try {
 					starNumber = Integer.parseInt(className.substring(className.length() - 1, className.length()));
 				} catch (NumberFormatException e2) {
 				}
 			}
 		}
-		
+
 		// Get Size
 		String matches = BaseUtil.regex_first("(\\d+(?:\\.\\d)?)MB", e.html());
 		if (null != matches) {
@@ -58,38 +58,38 @@ public class CatchQisuu extends BaseBook {
 		}
 		// Get Date
 		String date = BaseUtil.regex_first("\\d{4}-\\d{2}-\\d{2}", e.html());
-		
+
 		// Get Book Information
-		String c =  "",bookName = "";
+		String c = "", bookName = "";
 		if (!e.getElementsByTag("strong").isEmpty()) {
-			c =  e.getElementsByTag("strong").get(0).html();
-		}else{
-			c =  e.getElementsByTag("a").get(1).html();
+			c = e.getElementsByTag("strong").get(0).html();
+		} else {
+			c = e.getElementsByTag("a").get(1).html();
 		}
 		bookName = c.substring(c.indexOf(">") + 1 + 1, c.lastIndexOf("》"));
-		
-		if(size > 2.5 ){
-			if(starNumber > 4 || size > 4){
+
+		if (size > 2.5) {
+			if (starNumber > 4 || size > 4) {
 				ret[0] = BaseCatch.SUCCESS;
-				ret[1] ="http://dzs.qisuu.com/txt/"+bookName+".txt";
+				ret[1] = "http://dzs.qisuu.com/txt/" + bookName + ".txt";
 				ret[2] = size + "MB";
 				ret[3] = starNumber + " ";
 				ret[4] = date;
 				int s = starNumber;
-				while(s -- > 0){
+				while (s-- > 0) {
 					ret[3] += "*";
 				}
 				// http://dzs.qisuu.com/txt/觉醒日4.txt
 			}
 		}
-		
-//		System.out.println(starNumber);
-//		System.out.println(size);
-//		System.out.println(bookName);
-	
+
+		// System.out.println(starNumber);
+		// System.out.println(size);
+		// System.out.println(bookName);
+
 		return ret;
 	}
-	
+
 	/**
 	 * 
 	 * @param url
@@ -97,7 +97,7 @@ public class CatchQisuu extends BaseBook {
 	 *         4.无下一页，有下一组 组末 =>扫下一组 5.无下一页，无下一组 组末,链末 =>结束
 	 * @throws Exception
 	 */
-	public String[] doBookPage(String url,String inFile) throws Exception {
+	public String[] doBookPage(String url, String inFile) throws Exception {
 		/**
 		 * [0]=>CODE:SUCCESS/FAIL [1]=>IMG_SRC:STRING [2]=>NEXT_PAGE_URL:STRING
 		 * [3]=>NEXT_GROUP_URL:STRING
@@ -107,32 +107,34 @@ public class CatchQisuu extends BaseBook {
 			Document doc = connect(url);
 			Elements imgNodes = this.getPageImgeNodes(doc);
 			String[] singleRet = {};
-			for(Element element : imgNodes){
+			for (Element element : imgNodes) {
 				singleRet = this.doMatches(element);
-				if(BaseCatch.SUCCESS.equals(singleRet[0])){
+				if (BaseCatch.SUCCESS.equals(singleRet[0])) {
 					// Get The Books I want to download
-					
+
 					// Check Earliest Day & Last Book Name
-					if(this.checkEarliestDay( singleRet[4])){
+					if (this.checkEarliestDay(singleRet[4])) {
 						logger.info("Stoped as earliest date touched");
 						return ret;
 					}
-					
-					if(this.isDownloaded( singleRet[1])){
+
+					if (this.isDownloaded(singleRet[1])) {
 						logger.info("Stoped as we have already got this book");
 						return ret;
 					}
-					
+
 					if (!"".equals(inFile))
-						appendLine(inFile, singleRet[1]);// Write ImgSrc Into File
-		
-					logger.info("Get  Book  SRC:\t" + singleRet[4] +" "+ singleRet[1] + "\t"+ singleRet[2] +"\t"+ singleRet[3]);
-				}else{
-					// No thing to  download
-//					logger.info("Get  Nothing");
+						appendLine(inFile, singleRet[1]);// Write ImgSrc Into
+															// File
+
+					logger.info("Get  Book  SRC:\t" + singleRet[4] + " " + singleRet[1] + "\t" + singleRet[2] + "\t"
+							+ singleRet[3]);
+				} else {
+					// No thing to download
+					// logger.info("Get Nothing");
 				}
 			}
-			
+
 			Element nextPageNode = this.getNextPageNode(doc);
 			// 获取下一组的节点
 			Element nextGroup = this.getNextGroupNode(doc);
@@ -163,15 +165,15 @@ public class CatchQisuu extends BaseBook {
 		String pageUrl = basePath + pageName;
 		String ret[] = null;
 		String nextUrl = pageUrl;
-		int searchedPageNumber = 0 ;
-		
+		int searchedPageNumber = 0;
+
 		while (!"#".equals(nextUrl) && !"".equals(nextUrl)) {
-			ret = doBookPage(pageUrl,inFile);
+			ret = doBookPage(pageUrl, inFile);
 			if (BaseCatch.SUCCESS.equals(ret[0])) {
-				searchedPageNumber ++;
+				searchedPageNumber++;
 				// IF Success
 				nextUrl = ret[2];
-				if(this.checkMaxSearchPageNumber(searchedPageNumber)){
+				if (this.checkMaxSearchPageNumber(searchedPageNumber)) {
 					logger.info("Stop Looping as Page Search Count larger reach limitation");
 					return "";
 				}
@@ -200,18 +202,16 @@ public class CatchQisuu extends BaseBook {
 		}
 		return "";
 	}
-	
-	
-	
+
 	@Override
 	public Element getNextPageNode(Document doc) {
 		try {
-			
+
 			Elements as = doc.getElementsByClass("tspage").get(0).getElementsByTag("a");
 			int length = as.size();
-			while(length -- > 0){
+			while (length-- > 0) {
 				String html = as.get(length).html();
-				if(html.indexOf("下一页") >= 0){
+				if (html.indexOf("下一页") >= 0) {
 					break;
 				}
 			}
@@ -223,7 +223,6 @@ public class CatchQisuu extends BaseBook {
 		return null;
 	}
 
-	
 	public Elements getPageImgeNodes(Document doc) {
 		try {
 			Elements imgeNode = doc.getElementsByClass("listBox").get(0).getElementsByTag("li");
@@ -233,7 +232,7 @@ public class CatchQisuu extends BaseBook {
 		}
 		return null;
 	}
-	
+
 	@Override
 	public Element getPageImgeNode(Document doc) {
 		// TODO Auto-generated method stub
@@ -241,13 +240,12 @@ public class CatchQisuu extends BaseBook {
 	}
 
 	public static void main(String[] args) throws Exception {
-		
+
 		CatchQisuu cc = new CatchQisuu("http://www.qisuu.com/soft/sort01/");
 		cc.setMaxSearchPageNumber(3);
-//		cc.setEarliestDate("2016-09-20");
-//		cc.setLastBookName(new String[]{"独步"});
+		cc.setEarliestDate("2016-09-01");
 		cc.doLoop();
-		
+
 		// Catch4493 c = new
 		// Catch4493("http://www.4493.com/wangluomeinv/28247/1.htm");
 		// c.doLoop();
