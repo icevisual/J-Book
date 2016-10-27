@@ -4,12 +4,12 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.ServerSocket;
@@ -19,18 +19,17 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.jsoup.Connection;
+import org.jsoup.Connection.Method;
 import org.jsoup.Connection.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -50,7 +49,7 @@ public class Main {
 		return time.format(nowTime) + UUID.randomUUID().toString().substring(0, 5);
 	}
 
-	public static String[] loadProxy() throws Exception{
+	public static String[] loadProxy() throws Exception {
 		String baseDir = System.getProperty("user.dir");
 		String filename = baseDir + "\\proxy.data";
 		StringBuffer sBuffer = new StringBuffer();
@@ -58,15 +57,14 @@ public class Main {
 		BufferedReader br = new BufferedReader(fr);
 		String line = "";
 		String[] coll = new String[100];
-		int i = 0 ;
+		int i = 0;
 		while ((line = br.readLine()) != null) {
-			coll[i ++] = line;
+			coll[i++] = line;
 		}
 		br.close();
 		return coll;
 	}
-	
-	
+
 	/**
 	 * JSOUP 远程链接
 	 * 
@@ -80,7 +78,7 @@ public class Main {
 	public static Document connect(String pageUrl, int time) throws IOException, InterruptedException {
 		Document doc = null;
 		try {
-//			 doc = Jsoup.connect(pageUrl).
+			// doc = Jsoup.connect(pageUrl).
 			doc = Jsoup.connect(pageUrl)
 					.header("User-Agent",
 							"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.65 Safari/537.36")
@@ -100,26 +98,44 @@ public class Main {
 		}
 		return doc;
 	}
-	
-	
-	public static Map<String, String> loadCookies() throws Exception{
+
+	public static Map<String, String> loadCookieFile() throws Exception {
+		String baseDir = System.getProperty("user.dir");
+		String filename = baseDir + "\\cookie.txt";
+		StringBuffer sBuffer = new StringBuffer();
+		FileReader fr = new FileReader(filename);
+		BufferedReader br = new BufferedReader(fr);
+		String line = "";
+		int i = 0;
+		Map<String, String> cookies = new LinkedHashMap<String, String>();
+		while ((line = br.readLine()) != null) {
+			if ("".equals(line.trim()) || line.startsWith("# ")) {
+				continue;
+			}
+			String[] sp = line.split("\\s+");
+			cookies.put(sp[5], sp[6]);
+		}
+		br.close();
+		return cookies;
+	}
+
+	public static Map<String, String> loadCookies() throws Exception {
 		String baseDir = System.getProperty("user.dir");
 		String filename = baseDir + "\\cookies";
 		StringBuffer sBuffer = new StringBuffer();
 		FileReader fr = new FileReader(filename);
 		BufferedReader br = new BufferedReader(fr);
 		String line = "";
-		int i = 0 ;
-		Map<String, String> cookies = new LinkedHashMap<String,String>();
+		int i = 0;
+		Map<String, String> cookies = new LinkedHashMap<String, String>();
 		while ((line = br.readLine()) != null) {
-			String [] sp = line.split("\\s+");
+			String[] sp = line.split("\\s+");
 			cookies.put(sp[0], sp[1]);
 		}
 		br.close();
 		return cookies;
 	}
-	
-	
+
 	/**
 	 * JSOUP 远程链接
 	 * 
@@ -130,18 +146,18 @@ public class Main {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public static Document connectWithProxy(String pageUrl, int time,String proxy) throws Exception {
+	public static Document connectWithProxy(String pageUrl, int time, String proxy) throws Exception {
 		Document doc = null;
 		try {
-			if("".equals(proxy)){
+			if ("".equals(proxy)) {
 				return connect(pageUrl, time);
 			}
-			
-			Map<String, String> cookies = Main.loadCookies();
-			
+
+			Map<String, String> cookies = Main.loadCookieFile();
+
 			String[] proxySet = proxy.split("\\:");
 			doc = Jsoup.connect(pageUrl).cookies(cookies)
-					.proxy(proxySet[0], Integer.parseInt(proxySet[1]))
+					// .proxy(proxySet[0], Integer.parseInt(proxySet[1]))
 					.header("User-Agent",
 							"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.65 Safari/537.36")
 					.get();
@@ -152,7 +168,7 @@ public class Main {
 			if (time < 20) {
 				// 10*(x^(1/3)-1)/x^(1/4)
 				Thread.sleep(t * 100);
-				return connectWithProxy(pageUrl, time + 1,proxy);
+				return connectWithProxy(pageUrl, time + 1, proxy);
 			} else {
 				System.out.println("SocketTimeoutException:" + pageUrl);
 				throw new SocketTimeoutException();
@@ -258,28 +274,6 @@ public class Main {
 		}
 	}
 
-	public static String file_get_content(String filename) throws Exception {
-		StringBuffer sBuffer = new StringBuffer();
-		FileReader fr = new FileReader(filename);
-		BufferedReader br = new BufferedReader(fr);
-		String line = "";
-		while ((line = br.readLine()) != null) {
-			sBuffer.append(line);
-		}
-		br.close();
-		return sBuffer.toString();
-	}
-
-	public static void downloadDemo(int uid) throws Exception {
-		System.out.println(System.getProperty("user.dir"));
-		String url = "http://bbs.ubnt.com.cn/home.php?mod=space&uid=" + uid + "&do=profile&from=space";
-		Document root = Main.connect(url, 1);
-		File file = new File(System.getProperty("user.dir") + "\\html-" + uid);
-		FileWriter fileWriter = new FileWriter(file);
-		fileWriter.write(root.html());
-		fileWriter.close();
-	}
-
 	public static String delHTMLTag(String htmlStr) {
 		String regEx_script = "<script[^>]*?>[\\s\\S]*?<\\/script>"; // 定义script的正则表达式
 		String regEx_style = "<style[^>]*?>[\\s\\S]*?<\\/style>"; // 定义style的正则表达式
@@ -378,7 +372,7 @@ public class Main {
 		return infoMap;
 	}
 
-	public static String toSql(Map<String, String> map,Set<String> colSet ) throws Exception {
+	public static String toSql(Map<String, String> map, Set<String> colSet) throws Exception {
 		Iterator<String> it = map.keySet().iterator();
 		String key = "", value = "";
 		StringBuffer sqlCols = new StringBuffer();
@@ -394,8 +388,8 @@ public class Main {
 				sqlCols.append(",");
 				sqlVals.append(",");
 			}
-			
-			if(!colSet.contains(key)){
+
+			if (!colSet.contains(key)) {
 				colSet.add(key);
 			}
 		}
@@ -403,86 +397,166 @@ public class Main {
 		sqlVals.append(");");
 		return sqlCols.append(sqlVals).toString();
 	}
-	
+
 	public static void printColSet(Set<String> col) {
 		Iterator<String> it = col.iterator();
 		String key = "", value = "";
 		while (it.hasNext()) {
 			key = it.next();
-			System.out.println("  `"+key+"` varchar(255) NULL DEFAULT NULL COMMENT '"+key+"',");
+			System.out.println("  `" + key + "` varchar(255) NULL DEFAULT NULL COMMENT '" + key + "',");
 		}
 	}
-	
 
-	public static void Loop(int startIndex,int endIndex ,String tag,String proxy) throws Exception {
-//		int startIndex = 1, endIndex = 501,
+	public static void Loop(int startIndex, int endIndex, String tag, String proxy) throws Exception {
+		// int startIndex = 1, endIndex = 501,
 		int uid = 0;
 		String baseDir = System.getProperty("user.dir");
 		Map<String, String> infoMap = null; // Information Map
-//		endIndex = 3;
-		
+		// endIndex = 3;
+
 		File file = new File(baseDir + "\\" + startIndex + "-" + endIndex + ".sql");
 		FileWriter fileWriter = new FileWriter(file); // Insert Sql File
-//		String[] proxy = Main.loadProxy();// Proxy Array
-		
+		// String[] proxy = Main.loadProxy();// Proxy Array
+
 		Set<String> colSet = new LinkedHashSet<String>();// Columns Set
-//		endIndex = startIndex + 4;
+		// endIndex = startIndex + 4;
 		for (int i = startIndex; i < endIndex; i++) {
 			uid = i;
 			String url = "http://bbs.ubnt.com.cn/home.php?mod=space&uid=" + uid + "&do=profile&from=space";
-			Document root = Main.connectWithProxy(url, 1,proxy);
+			Document root = Main.connectWithProxy(url, 1, proxy);
 			try {
-				System.out.println("[ "+tag+" ][ catch uid = " + uid + "]");
+				System.out.println("[ " + tag + " ][ catch uid = " + uid + "]");
 				infoMap = Main.anylze(root);
 				infoMap.put("uid", uid + "");
 				Main.printMap(infoMap);
-				String sql = Main.toSql(infoMap,colSet);
+				String sql = Main.toSql(infoMap, colSet);
 				fileWriter.write(sql + "\n");
 				Thread.sleep((int) (Math.random() * 500 + 500));
 			} catch (Exception e) {
-				System.out.println("[ "+tag+" ][ uid = " + uid + " Not Exists ]");
+				System.out.println("[ " + tag + " ][ uid = " + uid + " Not Exists ]");
 			}
 		}
 		fileWriter.close();
-//		Main.printColSet(colSet);
+		// Main.printColSet(colSet);
 	}
-	
-	
-	public static int randomInt(int max){
-		return (int)(max * Math.random());
+
+	public static int randomInt(int max) {
+		return (int) (max * Math.random());
 	}
 
 	public static void main(String[] args) throws Exception {
-//		Main.Loop(501,1001);
+		// Main.Loop(501,1001);
 
-//		String [] proxys = {"","106.75.128.90:80","106.75.128.89:80","119.6.136.122:80"};
-//		int start = 2001;
-//		for(int i = 0 ; i < 1 ; i ++){
-//			ThreadCatch t1 = new ThreadCatch("C" + i,proxys[i], start + i * 500,start + (i + 1) * 500);
-//			t1.start();
-//		}
-		
-		Document doc= Main.connectWithProxy("http://bbs.ubnt.com.cn/home.php?mod=space&uid=222&do=profile&from=space", 1,"");
+		// Main.printMap(Main.loadCookieFile());
+
+		// String [] proxys =
+		// {"","106.75.128.90:80","106.75.128.89:80","119.6.136.122:80"};
+		// int start = 2001;
+		// for(int i = 0 ; i < 1 ; i ++){
+		// ThreadCatch t1 = new ThreadCatch("C" + i,proxys[i], start + i *
+		// 500,start + (i + 1) * 500);
+		// t1.start();
+		// }
+
+		Document doc = Main.connectWithProxy("http://bbs.ubnt.com.cn/home.php?mod=space&uid=222&do=profile&from=space",
+				1, "");
 		System.out.println(doc.html());
-//		
+
+		int a = 0;
+		if (a == 0) {
+			return;
+		}
+		//
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("user", "icevisual@hotmail.com");
+		map.put("password", "10109267");
+
+		String jsonPayload = "{\"user\":\"icevisual@hotmail.com\",\"password\":\"10109267\"}";
+
+		Connection conn = Jsoup.connect("https://api.ubnt.com.cn");
+		conn.header("(Request-Line)", "POST /login HTTP/1.1");
+		conn.header("Accept", "application/json, text/javascript, */*; q=0.01");
+		conn.header("Accept-Encoding", "gzip, deflate, br");
+		conn.header("Accept-Language", "zh-CN,zh;q=0.8");
+		conn.header("Cache-Control", "no-cache");
+		conn.header("Connection", "Keep-Alive");
+		conn.header("Content-Type", "application/json");
+		conn.header("Host", "api.ubnt.com.cn");
+		conn.header("Referer", "https://account.ubnt.com.cn/login?redirect=http%3A%2F%2Fbbs.ubnt.com.cn%2Fforum.php");
+		conn.header("User-Agent",
+				"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36");
+
+		Response response = conn.ignoreContentType(true).method(Method.POST).data("", jsonPayload).execute();
+		String json = response.body();
+		System.out.println(json);
+		// Main.printMap(response.cookies());
+		//
+
 		
-//		Main.printMap(Main.loadCookies());
-		
-		
-//		for(int i = 0 ; i < 4 ; i ++){
-//			ThreadCatch t1 = new ThreadCatch("C" + i,proxys[i], start + i * 500,start + (i + 1) * 500);
-//			t1.start();
-//		}
-// 		120.25.105.45:81
-//		106.75.128.90:80
-//		106.75.128.89:80
-//		139.196.108.68:80
-//		String[] proxy = Main.loadProxy();
-//		System.out.println(proxy.length);
-//		System.out.println(proxy[99].split("\\:")[0] + " " + proxy[99].split("\\:")[1]);
-//		
-//		Document doc= Main.connectWithProxy("http://bbs.ubnt.com.cn/home.php?mod=space&uid=501&do=profile&from=space", 1,"");
-//		System.out.println(doc.html());
-//		Main.connect("http://test.open.qiweiwangguo.com/", 1);
+		// for(int i = 0 ; i < 4 ; i ++){
+		// ThreadCatch t1 = new ThreadCatch("C" + i,proxys[i], start + i *
+		// 500,start + (i + 1) * 500);
+		// t1.start();
+		// }
+		// 120.25.105.45:81
+		// 106.75.128.90:80
+		// 106.75.128.89:80
+		// 139.196.108.68:80
+		// String[] proxy = Main.loadProxy();
+		// System.out.println(proxy.length);
+		// System.out.println(proxy[99].split("\\:")[0] + " " +
+		// proxy[99].split("\\:")[1]);
+		//
+		// Document doc=
+		// Main.connectWithProxy("http://bbs.ubnt.com.cn/home.php?mod=space&uid=501&do=profile&from=space",
+		// 1,"");
+		// System.out.println(doc.html());
+		// Main.connect("http://test.open.qiweiwangguo.com/", 1);
 	}
+
+	public static void HttpClient() {
+
+		try {
+
+			String url = "http://www.google.com";
+
+			URL obj = new URL(url);
+			HttpURLConnection conn = (HttpURLConnection) obj.openConnection();
+			conn.setReadTimeout(5000);
+			conn.addRequestProperty("Accept-Language", "en-US,en;q=0.8");
+			conn.addRequestProperty("User-Agent", "Mozilla");
+			conn.addRequestProperty("Referer", "google.com");
+
+			conn.setDoOutput(true);
+
+			OutputStreamWriter w = new OutputStreamWriter(conn.getOutputStream(), "UTF-8");
+
+			w.write("SOME_JSON_STRING_HERE");
+			w.close();
+
+			System.out.println("Request URL ... " + url);
+
+			int status = conn.getResponseCode();
+
+			System.out.println("Response Code ... " + status);
+
+			BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			String inputLine;
+			StringBuffer html = new StringBuffer();
+
+			while ((inputLine = in.readLine()) != null) {
+				html.append(inputLine);
+			}
+
+			in.close();
+			conn.disconnect();
+
+			System.out.println("URL Content... \n" + html.toString());
+			System.out.println("Done");
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 }
