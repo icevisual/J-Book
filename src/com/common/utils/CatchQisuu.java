@@ -55,10 +55,12 @@ public class CatchQisuu extends BaseBook {
 
 		// Get Book Information
 		String c = "", bookName = "";
-		if (!e.getElementsByTag("strong").isEmpty()) {
+		if (!e.getElementsByTag("font").isEmpty()) {
+			c = e.getElementsByTag("font").get(0).html();
+		}else if (!e.getElementsByTag("strong").isEmpty()) {
 			c = e.getElementsByTag("strong").get(0).html();
 		} else {
-			c = e.getElementsByTag("a").get(1).html();
+			c = e.getElementsByTag("a").get(e.getElementsByTag("a").size() - 1).html();
 		}
 		bookName = c.substring(c.indexOf(">") + 1 + 1, c.lastIndexOf("》"));
 
@@ -297,6 +299,9 @@ public class CatchQisuu extends BaseBook {
 
 		String[] urls = { 
 				"http://www.qisuu.com/soft/sort02/",
+				"http://www.qisuu.com/soft/sort04/",
+				"http://www.qisuu.com/soft/sort05/",
+				"http://www.qisuu.com/soft/sort06/",
 				"http://www.qisuu.com/soft/sort07/"
 		};
 		CatchQisuu cc = new CatchQisuu("http://www.qisuu.com/soft/sort01/");
