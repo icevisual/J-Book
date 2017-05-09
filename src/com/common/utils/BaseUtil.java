@@ -69,9 +69,9 @@ public class BaseUtil {
 		try {
 //			doc = Jsoup.connect(pageUrl).get();
 			doc =  Jsoup.connect(pageUrl).
-			 header("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.65 Safari/537.36")
+			 header("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.96 Safari/537.36")
 			 .get();
-		} catch (SocketTimeoutException e) {
+		} catch (Exception e) {
 			int t = (int) (100*(Math.pow(time, 1.0/3)-1)/Math.pow(time, 1.0/4));
 			logger.info("TIME OUT PGURL:"+pageUrl);
 			logger.info("TIME OUT COUNT:"+time+" SELLP:"+(t/10)+" S");
