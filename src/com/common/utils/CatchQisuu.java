@@ -1,17 +1,114 @@
 package com.common.utils;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class CatchQisuu extends BaseBook {
-
 	public CatchQisuu(String startUrl) {
 		super(startUrl);
 		this.setImgSrcFile(".\\load\\output\\000.txt");
 		this.deleteFile(this.getImgSrcFile());
 		this.setDownload(false);
 	}
+	
+	private List<String> denyRuleKeySet = new LinkedList<String>();
+	private List<String> allowRuleKeySet = new LinkedList<String>();
+	
+
+
+	public float getMinBookSize() {
+		return minBookSize;
+	}
+
+	public void setMinBookSize(float minBookSize) {
+		this.minBookSize = minBookSize;
+	}
+
+	public int getMinStarNumber() {
+		return minStarNumber;
+	}
+
+	public void setMinStarNumber(int minStarNumber) {
+		this.minStarNumber = minStarNumber;
+	}
+
+	public float getBigEnoughBookSize() {
+		return bigEnoughBookSize;
+	}
+
+	public void setBigEnoughBookSize(float bigEnoughBookSize) {
+		this.bigEnoughBookSize = bigEnoughBookSize;
+	}
+
+	/**
+	 * 最小星星数量
+	 */
+	private int minStarNumber = 3;
+	
+	/**
+	 * 足够大的长度
+	 */
+	private float bigEnoughBookSize = 4f;
+	
+	/**
+	 * 最下的长度
+	 */
+	private float minBookSize = 2.0f;
+	
+	public void addDenyRule(String keyWord){
+		this.denyRuleKeySet.add(keyWord);
+	}
+	
+	public void addDenyRule(String [] keyWords){
+		for (String string : keyWords) {
+			this.denyRuleKeySet.add(string);
+		}
+	}
+
+	public void addAllowRule(String keyWord){
+		this.allowRuleKeySet.add(keyWord);
+	}
+	
+	public void addAllowRule(String[] keyWords){
+		for (String string : keyWords) {
+			this.allowRuleKeySet.add(string);
+		}
+	}
+	
+	public boolean denyOrAllow(String bookName){
+	
+		String [] denyRuleKeyArray = new String[100];// (String[]) denyRuleKeySet.toArray();
+		String [] allowRuleKeyArray = new String[100];// (String[]) allowRuleKeySet.toArray();
+		denyRuleKeySet.toArray(denyRuleKeyArray);
+		allowRuleKeySet.toArray(allowRuleKeyArray);
+		
+
+		for(int i = 0 ; i < allowRuleKeySet.size() ; i ++){
+			String string = allowRuleKeyArray[i];
+			if(bookName.indexOf(string) >= 0){
+				logger.info("Allow because hit " + string);
+				return true;
+			}
+		}
+		
+		for(int i = 0 ; i < denyRuleKeySet.size() ; i ++){
+			String string = denyRuleKeyArray[i];
+			if(bookName.indexOf(string) >= 0){
+				logger.info("Deny \""+bookName+"\" because hit " + string);
+				return false;
+			}
+		}
+		
+		
+		
+		//logger.info("Allow because no keyWords hit ");
+		return true;
+	}
+	
 
 	/**
 	 * process the match and determine what to get
@@ -62,10 +159,15 @@ public class CatchQisuu extends BaseBook {
 		} else {
 			c = e.getElementsByTag("a").get(e.getElementsByTag("a").size() - 1).html();
 		}
-		bookName = c.substring(c.indexOf(">") + 1 + 1, c.lastIndexOf("》"));
+		bookName = c.substring(c.indexOf("《") + 1, c.lastIndexOf("》"));
 
-		if (size > 2.5) {
-			if (starNumber >= 4 || size > 4) {
+		if (size > this.getMinBookSize()) {
+			if (starNumber >= this.getMinStarNumber() || size > this.getBigEnoughBookSize()) {
+				
+				if(!denyOrAllow(bookName)){
+					return ret;
+				}
+				
 				ret[0] = BaseCatch.SUCCESS;
 				ret[1] = "http://dzs.qisuu.com/txt/" + bookName + ".txt";
 				ret[2] = size + "MB";
@@ -307,6 +409,18 @@ public class CatchQisuu extends BaseBook {
 		CatchQisuu cc = new CatchQisuu("http://www.qisuu.com/soft/sort01/");
 		cc.setExcessGroupUrls(urls);
 		cc.setImgSrcFile(".\\load\\output\\000.txt");
+		cc.addDenyRule(new String[]{
+			"朋友圈","文娱","抗日","抢红包","娱乐","乐坛","体坛"
+		});
+		
+		cc.addAllowRule(new String[]{
+			"机甲"
+		});
+		
+		cc.setMinBookSize(2.f);
+		cc.setMinStarNumber(3);
+		cc.setBigEnoughBookSize(4);
+		
 		cc.setMaxSearchPageNumber(3);
 		cc.setEarliestDate("2016-09-01");
 //		cc.setEarliestDate("2016-10-01");
