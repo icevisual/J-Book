@@ -410,7 +410,7 @@ public class CatchQisuu extends BaseBook {
 		cc.setExcessGroupUrls(urls);
 		cc.setImgSrcFile(".\\load\\output\\000.txt");
 		cc.addDenyRule(new String[]{
-			"朋友圈","文娱","抗日","抢红包","娱乐","乐坛","体坛"
+			"朋友圈","文娱","抗日","抢红包","娱乐","乐坛","体坛","棒球","篮球","足球"
 		});
 		
 		cc.addAllowRule(new String[]{
