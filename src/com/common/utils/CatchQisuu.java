@@ -1,5 +1,6 @@
 package com.common.utils;
 
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -7,18 +8,43 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+
+
 public class CatchQisuu extends BaseBook {
 	public CatchQisuu(String startUrl) {
 		super(startUrl);
 		this.setImgSrcFile(".\\load\\output\\000.txt");
 		this.deleteFile(this.getImgSrcFile());
 		this.setDownload(false);
+		this.initializeRenameBashFile();
 	}
 	
 	private List<String> denyRuleKeySet = new LinkedList<String>();
 	private List<String> allowRuleKeySet = new LinkedList<String>();
 	
+	private String RenameBashFilename = ".\\load\\output\\rename.sh";
+	
+	public void initializeRenameBashFile(){
+		String filename = this.getRenameBashFilename();
+		File file = new File(filename);
+		if (file.exists()) {
+			file.delete();
+			appendLine(filename, "#!/bin/sh");
+		}
+	}
+	
+	public void addBashContent(String cmd){
+		String filename = this.getRenameBashFilename();
+		appendLine(filename, cmd);
+	}
 
+	public String getRenameBashFilename() {
+		return RenameBashFilename;
+	}
+	
+	public String setRenameBashFilename() {
+		return RenameBashFilename;
+	}
 
 	public float getMinBookSize() {
 		return minBookSize;
@@ -119,7 +145,7 @@ public class CatchQisuu extends BaseBook {
 		/**
 		 * [0]=>CODE:SUCCESS/FAIL [1]=>BookName
 		 */
-		String[] ret = { BaseCatch.FAIL, "NAME", "SIZE", "SCORE", "DATE" };
+		String[] ret = { BaseCatch.FAIL, "NAME", "SIZE", "SCORE", "DATE","BOOKNAME_S", "SIZE_T", "SCORE_T" };
 		// Determine to download or not
 		// By Size and score
 
@@ -173,6 +199,9 @@ public class CatchQisuu extends BaseBook {
 				ret[2] = size + "MB";
 				ret[3] = starNumber + " ";
 				ret[4] = date;
+				ret[5] = bookName;
+				ret[6] = size + "";
+				ret[7] = starNumber + "";
 				int s = starNumber;
 				while (s-- > 0) {
 					ret[3] += "*";
@@ -227,6 +256,12 @@ public class CatchQisuu extends BaseBook {
 
 					logger.info("Get  Book  SRC:\t" + singleRet[4] + " " + singleRet[1] + "\t" + singleRet[2] + "\t"
 							+ singleRet[3]);
+					
+					// 5 6 7 = name , size , score
+					// Generate A bash file to rename files
+					// mv singleRet[5] singleRet[6]_singleRet[7]_singleRet[5]
+					
+					this.addBashContent("mv " + singleRet[5] + ".txt " + singleRet[6].replace(".", "") + "M" + singleRet[7] + "S" + singleRet[5]+".txt");
 				} else {
 					// No thing to download
 					// logger.info("Get Nothing");

@@ -256,7 +256,7 @@ public abstract class BaseCatch extends BaseUtil {
 		return "";
 	}
 
-	public boolean ifIgnoal(String path) {
+	public boolean isIgnoal(String path) {
 		String[] ACL = { "/meihuo/831.html", "/meihuo/835.html", "/meihuo/838.html", "/meihuo/847.html" };
 		for (int i = 0; i < ACL.length; i++) {
 			if (ACL[i].equals(path)) {
