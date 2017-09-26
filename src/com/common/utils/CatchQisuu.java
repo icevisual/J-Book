@@ -439,13 +439,14 @@ public class CatchQisuu extends BaseBook {
 				"http://www.qisuu.com/soft/sort04/",
 				"http://www.qisuu.com/soft/sort05/",
 				"http://www.qisuu.com/soft/sort06/",
-				"http://www.qisuu.com/soft/sort07/"
+				"http://www.qisuu.com/soft/sort07/",
+				"http://www.qisuu.com/soft/sort08/"
 		};
 		CatchQisuu cc = new CatchQisuu("http://www.qisuu.com/soft/sort01/");
 		cc.setExcessGroupUrls(urls);
 		cc.setImgSrcFile(".\\load\\output\\000.txt");
 		cc.addDenyRule(new String[]{
-			"朋友圈","文娱","抗日","抢红包","娱乐","乐坛","体坛","棒球","篮球","足球"
+			"朋友圈","文娱","抗日","抢红包","娱乐","乐坛","体坛","棒球","篮球","足球","火影","海贼王"
 		});
 		
 		cc.addAllowRule(new String[]{
