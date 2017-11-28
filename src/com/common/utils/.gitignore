@@ -12,3 +12,6 @@
 /ThreadCatch.class
 /UdpClientSocket.class
 /UdpServerSocket.class
+/Client.class
+/SocketServer.class
+/SocketService.class
