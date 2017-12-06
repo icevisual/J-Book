@@ -460,7 +460,7 @@ public class CatchQisuu extends BaseBook {
 		cc.setBigEnoughBookSize(4);
 		
 		cc.setMaxSearchPageNumber(3);
-		cc.setEarliestDate("2016-09-01");
+		cc.setEarliestDate("2017-11-27");
 //		cc.setEarliestDate("2016-10-01");
 		cc.doLoop();
 //		cc.mergeDaownloadList();
