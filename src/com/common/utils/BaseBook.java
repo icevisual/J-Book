@@ -129,6 +129,7 @@ public abstract class BaseBook extends BaseCatch {
 			fWriter = new FileWriter(mergeFile, false);
 			while (it.hasNext()) {
 				key = it.next();
+
 				value = map.get(key);
 				fWriter.write(key + "\n");
 			}
@@ -177,6 +178,10 @@ public abstract class BaseBook extends BaseCatch {
 						new InputStreamReader(new FileInputStream(new File(dirname + filename))));
 
 				while ((line = bReader.readLine()) != null) {
+					
+					if(line.lastIndexOf("/") >= 0)
+						line = line.substring(line.lastIndexOf("/"));
+					
 					this.setCachedLastBook(line, "");
 				}
 			} catch (Exception e) {

@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -16,12 +17,16 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -35,6 +40,13 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import com.sun.image.codec.jpeg.JPEGCodec;
+import com.sun.image.codec.jpeg.JPEGImageEncoder;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 
 public class Main {
 
@@ -444,11 +456,93 @@ public class Main {
 		return (int) (max * Math.random());
 	}
 
+	/**
+	 * 将指定byte数组转换为16进制的形式形式返回
+	 * 
+	 * @param src
+	 *            传入的数组
+	 * @return 需要打印的数组 String "EF"--> 0xEF
+	 */
+	public static String printBytes2HexString(byte[] b) {
+		if (b == null || b.length <= 0)
+			return null;
+		StringBuffer stringBuffer = new StringBuffer(b.length);
+		for (int i = 0; i < b.length; i++) {
+			String hex = Integer.toHexString(b[i] & 0xFF);
+			if (hex.length() == 1) {
+				hex = '0' + hex;
+			}
+			stringBuffer.append(" 0x" + hex.toUpperCase());
+		}
+		return stringBuffer.toString();
+	}
+
+	public static String stringMD5() {
+
+		try {
+			MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+			messageDigest.update(new byte[] { 0x01, 0x02, 0x03, 0x04 });
+			byte[] resultByteArray = messageDigest.digest();
+			return printBytes2HexString(resultByteArray);// byteArrayToHex(resultByteArray);
+		} catch (NoSuchAlgorithmException e) {
+			return null;
+		}
+	}
+
+	public static void SPByteArray(Byte[] Input, int LineCount, int EachLine) {
+		ArrayList<Byte> TempList = new ArrayList<Byte>();
+		int HalfLength = 0;
+		for (int i = 0; i < LineCount; i += EachLine) {
+
+		}
+	}
+
+	public static void asfdsad() throws IOException {
+		int width = 45, hight = 45;
+		BufferedImage image = new BufferedImage(width, hight, BufferedImage.TYPE_BYTE_GRAY);
+		Graphics g = (Graphics) image.getGraphics();
+		g.setColor(Color.white);
+		Font f = new Font("黑体", Font.PLAIN, 45);
+		g.setFont(f);
+		g.drawString("警", 0, 38);
+
+		int[] rgb = new int[3];
+		for (int i = 0; i < image.getHeight(); i++) 
+		{
+			for (int j = 0; j < image.getWidth(); j++) 
+			{
+				int pixel = image.getRGB(j, i);
+				rgb[0] = (pixel & 0xff0000) >> 16;
+				rgb[1] = (pixel & 0xff00) >> 8;
+				rgb[2] = (pixel & 0xff);
+				if(rgb[0] == 255)
+					System.out.print("●");
+				else
+					System.out.print("○");
+			}
+			System.out.println();
+		}
+
+		OutputStream os;
+
+		// os = new FileOutputStream("d:/union.jpg");
+		String shareFileName = "Test.jpg";
+		os = new FileOutputStream(shareFileName);
+		// 创键编码器，用于编码内存中的图象数据。
+		JPEGImageEncoder en = JPEGCodec.createJPEGEncoder(os);
+		en.encode(image);
+
+		os.close();
+	}
+
 	public static void main(String[] args) throws Exception {
 		// Main.Loop(501,1001);
-
+		asfdsad();
 		// Main.printMap(Main.loadCookieFile());
-
+		int a = 0;
+		if (a == 0) {
+			return;
+		}
 		// String [] proxys =
 		// {"","106.75.128.90:80","106.75.128.89:80","119.6.136.122:80"};
 		// int start = 2001;
@@ -462,10 +556,6 @@ public class Main {
 				1, "");
 		System.out.println(doc.html());
 
-		int a = 0;
-		if (a == 0) {
-			return;
-		}
 		//
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("user", "icevisual@hotmail.com");
@@ -492,7 +582,6 @@ public class Main {
 		// Main.printMap(response.cookies());
 		//
 
-		
 		// for(int i = 0 ; i < 4 ; i ++){
 		// ThreadCatch t1 = new ThreadCatch("C" + i,proxys[i], start + i *
 		// 500,start + (i + 1) * 500);
@@ -558,5 +647,5 @@ public class Main {
 			e.printStackTrace();
 		}
 	}
-	
+
 }

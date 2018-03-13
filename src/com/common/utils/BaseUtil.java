@@ -20,6 +20,8 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -69,7 +71,11 @@ public class BaseUtil {
 		try {
 //			doc = Jsoup.connect(pageUrl).get();
 			doc =  Jsoup.connect(pageUrl).
-			 header("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.96 Safari/537.36")
+					
+			 header("User-Agent", 
+					 "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"
+					 //"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.96 Safari/537.36"
+					 )
 			 .get();
 		} catch (Exception e) {
 			int t = (int) (100*(Math.pow(time, 1.0/3)-1)/Math.pow(time, 1.0/4));

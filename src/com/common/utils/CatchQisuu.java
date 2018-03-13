@@ -1,6 +1,9 @@
 package com.common.utils;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -135,13 +138,17 @@ public class CatchQisuu extends BaseBook {
 		return true;
 	}
 	
-
+	public String[] doMatches(Element e) throws Exception {
+		return doMatches(e,"");
+	}
 	/**
 	 * process the match and determine what to get
 	 * 
 	 * @return
+	 * @throws Exception 
+	 * @throws  
 	 */
-	public String[] doMatches(Element e) {
+	public String[] doMatches(Element e,String BaseUrl) throws Exception {
 		/**
 		 * [0]=>CODE:SUCCESS/FAIL [1]=>BookName
 		 */
@@ -175,7 +182,7 @@ public class CatchQisuu extends BaseBook {
 		}
 		// Get Date
 		String date = BaseUtil.regex_first("\\d{4}-\\d{2}-\\d{2}", e.html());
-
+	//    System.out.println(e.html());
 		// Get Book Information
 		String c = "", bookName = "";
 		if (!e.getElementsByTag("font").isEmpty()) {
@@ -183,9 +190,14 @@ public class CatchQisuu extends BaseBook {
 		}else if (!e.getElementsByTag("strong").isEmpty()) {
 			c = e.getElementsByTag("strong").get(0).html();
 		} else {
-			c = e.getElementsByTag("a").get(e.getElementsByTag("a").size() - 1).html();
+			c = e.getElementsByTag("a").get(0).html();
 		}
 		bookName = c.substring(c.indexOf("《") + 1, c.lastIndexOf("》"));
+
+		bookName = bookName.split("[\\(\\/\\[]")[0];
+		// bookName  /凡骨 [
+		
+		String DetailURL = e.getElementsByTag("a").get(0).attr("href");
 
 		if (size > this.getMinBookSize()) {
 			if (starNumber >= this.getMinStarNumber() || size > this.getBigEnoughBookSize()) {
@@ -194,8 +206,14 @@ public class CatchQisuu extends BaseBook {
 					return ret;
 				}
 				
+				Document detailDoc = connect(GetTrueURL(DetailURL,BaseUrl));
+				Elements eles = detailDoc.getElementsByClass("showDown");
+				String ScriptContent = 	eles.get(0).getElementsByTag("script").get(0).html();
+				String DownloadURL = ScriptContent.split("\\'\\,\\'")[1];
+	
+				// https://dzs.qisuu.com/36/36091/神级英雄.txt
 				ret[0] = BaseCatch.SUCCESS;
-				ret[1] = "http://dzs.qisuu.com/txt/" + bookName + ".txt";
+				ret[1] = DownloadURL;//"https://dzs.qisuu.com/"+PartURL+"/" + bookName + ".txt";
 				ret[2] = size + "MB";
 				ret[3] = starNumber + " ";
 				ret[4] = date;
@@ -217,6 +235,20 @@ public class CatchQisuu extends BaseBook {
 		return ret;
 	}
 
+	private String GetTrueURL(String PartURL,String BaseURL) throws Exception
+	{
+		URL url = new URL(BaseURL);
+		String BP = url.getProtocol() + "://"	+ url.getHost() ;
+		if(PartURL.startsWith("/"))
+		{
+			return BP + PartURL;
+		}
+		return BaseURL + PartURL;
+	}
+	
+	
+	
+	
 	/**
 	 * 
 	 * @param url
@@ -235,7 +267,7 @@ public class CatchQisuu extends BaseBook {
 			Elements imgNodes = this.getPageImgeNodes(doc);
 			String[] singleRet = {};
 			for (Element element : imgNodes) {
-				singleRet = this.doMatches(element);
+				singleRet = this.doMatches(element,url);
 				if (BaseCatch.SUCCESS.equals(singleRet[0])) {
 					// Get The Books I want to download
 
@@ -440,7 +472,7 @@ public class CatchQisuu extends BaseBook {
 		//		"http://www.qisuu.com/soft/sort05/",
 				"http://www.qisuu.com/soft/sort06/",
 				"http://www.qisuu.com/soft/sort07/",
-				"http://www.qisuu.com/soft/sort08/"
+		//		"http://www.qisuu.com/soft/sort08/"
 		};
 		CatchQisuu cc = new CatchQisuu("http://www.qisuu.com/soft/sort01/");
 		cc.setExcessGroupUrls(urls);
@@ -448,7 +480,7 @@ public class CatchQisuu extends BaseBook {
 		cc.addDenyRule(new String[]{
 			"朋友圈","文娱","抗日","抢红包","娱乐","乐坛",
 			"体坛","棒球","篮球","足球","火影","海贼王","华娱","明星",
-			"中锋","英雄联盟","冠军","网游"
+			"中锋","英雄联盟","冠军","网游","LOL","DNF","篮神"
 		});
 		
 		cc.addAllowRule(new String[]{
